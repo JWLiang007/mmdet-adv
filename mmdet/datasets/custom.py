@@ -66,6 +66,7 @@ class CustomDataset(Dataset):
                  seg_suffix='.png',
                  proposal_file=None,
                  test_mode=False,
+                 filter_imgs=True,
                  filter_empty_gt=True,
                  file_client_args=dict(backend='disk')):
         self.ann_file = ann_file
@@ -75,6 +76,7 @@ class CustomDataset(Dataset):
         self.seg_suffix = seg_suffix
         self.proposal_file = proposal_file
         self.test_mode = test_mode
+        self.filter_imgs = filter_imgs
         self.filter_empty_gt = filter_empty_gt
         self.file_client = mmcv.FileClient(**file_client_args)
         self.CLASSES = self.get_classes(classes)
@@ -120,7 +122,10 @@ class CustomDataset(Dataset):
 
         # filter images too small and containing no annotations
         if not test_mode:
-            valid_inds = self._filter_imgs()
+            if self.filter_imgs:
+                valid_inds = self._filter_imgs()
+            else:
+                valid_inds = range(len(self.data_infos))
             self.data_infos = [self.data_infos[i] for i in valid_inds]
             if self.proposals is not None:
                 self.proposals = [self.proposals[i] for i in valid_inds]
