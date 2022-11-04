@@ -1,3 +1,10 @@
 #!/bin/bash
 
-python tools/ta_test_GT.py config/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth --method fgsm --show-dir adv_res/fr50_fgsm_15 --eps 15
+#python tools/ta_test_GT.py config/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth --method fgsm --show-dir adv_res/fr50_fgsm_15 --eps 15
+# python ../tools/test.py config/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth --eval  bbox --work-dir adv_res/eval_metrics  --eval-prefix  fr50_fgsm_15 --cfg-option  data.test.img_prefix=adv_res/fr50_fgsm_15
+# python ../tools/test.py config/atss/atss_r50_fpn_1x_coco.py checkpoints/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth --eval  bbox --work-dir adv_res/eval_metrics  --eval-prefix  atss_r50_fgsm_15 --cfg-option  data.test.img_prefix=adv_res/atss_r50_fgsm_15
+# python ../tools/test.py config/yolox/yolox_s_8x8_300e_coco.py checkpoints/yolox_s_8x8_300e_coco_20211121_095711-4592a793.pth --eval  bbox --work-dir adv_res/eval_metrics  --eval-prefix  yolox_s_fgsm_15 --cfg-option  data.test.img_prefix=adv_res/yolox_s_fgsm_15
+# python ../tools/test.py config/fcos/fcos_r50_caffe_fpn_gn-head_1x_coco.py checkpoints/fcos_r50_caffe_fpn_gn-head_1x_coco-821213aa.pth --eval  bbox --work-dir adv_res/eval_metrics  --eval-prefix  fcos_r50_fgsm_15 --cfg-option  data.test.img_prefix=adv_res/fcos_r50_fgsm_15
+# python ../tools/test.py config/cornernet/cornernet_hourglass104_mstest_32x3_210e_coco.py  checkpoints/cornernet_hourglass104_mstest_32x3_210e_coco_20200819_203110-1efaea91.pth --eval  bbox --work-dir adv_res/eval_metrics  --eval-prefix  cornernet_32x3_fgsm_15 --cfg-option  data.test.img_prefix=adv_res/cornernet_32x3_fgsm_15
+# python ../tools/test.py config/gfl/gfl_r50_fpn_1x_coco.py checkpoints/gfl_r50_fpn_1x_coco_20200629_121244-25944287.pth --eval  bbox --work-dir adv_res/eval_metrics  --eval-prefix  gfl_r50_fgsm_15 --cfg-option  data.test.img_prefix=adv_res/gfl_r50_fgsm_15
+# python ../tools/test.py config/detectors/cascade_rcnn_r50_rfp_1x_coco.py  checkpoints/cascade_rcnn_r50_rfp_1x_coco-8cf51bfd.pth --eval  bbox --work-dir adv_res/eval_metrics  --eval-prefix  detectors_r50_fgsm_15 --cfg-option  data.test.img_prefix=adv_res/detectors_r50_fgsm_15

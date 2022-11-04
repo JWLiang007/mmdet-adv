@@ -58,10 +58,17 @@ class FGSM(Attack):
         else:
             losses = self.model(**new_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],
                             gt_labels=data['gt_labels'][0].data[0])
-            try:
-                loss_cls = sum(_loss.mean() for _loss in losses['loss_cls']) 
-            except:
-                loss_cls = losses['loss_cls']
+            loss_cls ,_ = self.model.module._parse_losses(losses)
+            # loss_cls = torch.zeros((1)).cuda()
+            # for k in losses.keys():
+            #     if 'loss_cls' in k:
+            #         _loss_cls = sum(_loss.mean() for _loss in losses[k])  if isinstance(losses[k],list) else losses[k]
+            #         loss_cls+=_loss_cls
+            # # if 'loss_cls' in losses.keys():
+            # #     loss_cls = sum(_loss.mean() for _loss in losses['loss_cls'])  if isinstance(losses['loss_cls'],list) else losses['loss_cls']
+            #     elif 'det_loss' in k:
+            #         loss_cls = sum(_loss.mean() for _loss in losses[k])  if isinstance(losses[k],list) else losses[k]
+
 
         self.model.zero_grad()
         loss_cls= loss_cls

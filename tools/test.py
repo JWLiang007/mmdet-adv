@@ -29,6 +29,11 @@ def parse_args():
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
+    parser.add_argument(
+        '--eval-prefix',
+        type=str,
+        default="",
+        help='prefix of the file containing evaluation metrics')
     parser.add_argument('--out', help='output result file in pickle format')
     parser.add_argument(
         '--fuse-conv-bn',
@@ -211,7 +216,7 @@ def main():
     if args.work_dir is not None and rank == 0:
         mmcv.mkdir_or_exist(osp.abspath(args.work_dir))
         timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-        json_file = osp.join(args.work_dir, f'eval_{timestamp}.json')
+        json_file = osp.join(args.work_dir, args.eval_prefix+f'_eval_{timestamp}.json')
 
     # build the dataloader
     dataset = build_dataset(cfg.data.test)

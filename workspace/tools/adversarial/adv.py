@@ -54,8 +54,11 @@ def single_gpu_adv(model,
 
                 ori_h, ori_w = img_meta['ori_shape'][:-1]
                 img_show = mmcv.imresize(img_show, (ori_w, ori_h))
-
-                out_file = osp.join(args.show_dir, img_meta['ori_filename'])
+                if 'ori_filename' in img_meta.keys():
+                    img_basename = img_meta['ori_filename'] 
+                elif 'filename' in img_meta.keys() :
+                    img_basename = os.path.basename(img_meta['filename'])
+                out_file = osp.join(args.show_dir, img_basename)
 
                 mmcv.imwrite( img_show,out_file)
 
