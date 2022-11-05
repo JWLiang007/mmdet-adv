@@ -113,7 +113,12 @@ def parse_args():
     parser.add_argument('--local_rank', type=int, default=0)
 
     # attack argument
-
+    parser.add_argument(
+        '--score-thr',
+        type=float,
+        default=0.0,
+        help='pseudo label score threshold (default: 0.0)')
+    parser.add_argument('--with-gt', action='store_true', help='attack with ground truth')
     parser.add_argument('--method', type=str, default='difgsm', help='attack method')
     parser.add_argument('--eps', type=float, default=15, help='maximum perturbation')
     parser.add_argument('--alpha', type=float, default=4, help='step size')

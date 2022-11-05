@@ -15,6 +15,9 @@ from .tifgsm import  TIFGSM
 from .mifgsm import  MIFGSM
 from .vmifgsm import VMIFGSM
 from .fgsm import FGSM
+from .bim import BIM
+import numpy as np
+from mmcv.parallel.data_container import DataContainer
 from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
 
@@ -24,7 +27,8 @@ ta_factory = {
     'tifgsm': TIFGSM,
     'mifgsm': MIFGSM,
     'vmifgsm': VMIFGSM,
-    'fgsm':FGSM
+    'fgsm':FGSM,
+    'bim':BIM
 }
 
 
@@ -35,11 +39,15 @@ def single_gpu_adv(model,
 
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
-
     attack = ta_factory[args.method](model, args)
     for i, data in enumerate(data_loader):
 
-        adv = attack(data)
+        # test_res = dataset._det2gt(test_res)
+        # test_res=[i for i in test_res if i['score'] > 0.3]
+        new_data = data
+        if not args.with_gt:
+            new_data = det2gt(data,model,args.score_thr)
+        adv = attack(new_data)
 
         batch_size = adv.shape[0]
         if args.show_dir:
@@ -122,3 +130,25 @@ def multi_gpu_adv(model, data_loader, args):
                 prog_bar.update()
 
 
+def det2gt(data,model,score_thr):
+    new_data = {'img':data['img'],'img_metas':data['img_metas']}
+    gt_labels = []
+    gt_bboxes = []
+    test_res = model(**new_data,return_loss=False)
+    for res in test_res:
+        bboxes = np.vstack(res)
+        labels = [
+            np.full(bbox.shape[0], i, dtype=np.int32)
+            for i, bbox in enumerate(res)
+        ]
+        labels = np.concatenate(labels)
+        scores = bboxes[:, -1]
+        inds = scores > score_thr
+        bboxes = bboxes[inds, :4]
+        labels = labels[inds]
+        gt_labels.append(DataContainer([[torch.Tensor(labels).long()]])) 
+        gt_bboxes.append(DataContainer([[torch.Tensor(bboxes)]])) 
+    new_data['gt_labels']=gt_labels
+    new_data['gt_bboxes']=gt_bboxes
+    return new_data
+    
