@@ -63,10 +63,8 @@ class MIFGSM(Attack):
             else:
                 losses = self.model(**new_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],
                                 gt_labels=data['gt_labels'][0].data[0])
-                loss_cls = sum(_loss.mean() for _loss in losses['loss_cls'])
-
+                loss_cls ,_ = self.model.module._parse_losses(losses)
             self.model.zero_grad()
-            loss_cls= loss_cls* (-1.0)
             loss_cls.backward()
             grad = adv_images.grad.data
 
@@ -74,7 +72,7 @@ class MIFGSM(Attack):
             grad = grad + momentum * self.decay
             momentum = grad
 
-            adv_images = adv_images.detach() - alpha * grad.sign()
+            adv_images = adv_images.detach() + alpha * grad.sign()
             delta = torch.clamp(adv_images - images, min=-eps, max=eps)
             for chn in range(adv_images.shape[1]):
                 adv_images[:,chn:chn+1,:,:] = torch.clamp(images[:,chn:chn+1,:,:] + delta[:,chn:chn+1,:,:], min=lb[chn], max=ub[chn]).detach()
