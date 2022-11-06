@@ -126,3 +126,5 @@ work_dirs/
 workspace/adv_res/
 workspace/checkpoints/
 workspace/data/
+/workspace/nohup.out
+/workspace/run.sh

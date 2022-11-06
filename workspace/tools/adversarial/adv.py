@@ -148,6 +148,12 @@ def det2gt(data,model,score_thr):
         labels = labels[inds]
         gt_labels.append(DataContainer([[torch.Tensor(labels).long()]])) 
         gt_bboxes.append(DataContainer([[torch.Tensor(bboxes)]])) 
+        bad_idx = torch.unique(torch.where(gt_bboxes[-1].data[0][0]<0)[0])
+        if bad_idx.shape[0] != 0:
+            good_idx = torch.zeros(gt_bboxes[-1].data[0][0].size(0)) == 0
+            good_idx[bad_idx] = False
+            gt_bboxes[-1].data[0][0] = gt_bboxes[-1].data[0][0][good_idx]
+            gt_labels[-1].data[0][0] = gt_labels[-1].data[0][0][good_idx]
     new_data['gt_labels']=gt_labels
     new_data['gt_bboxes']=gt_bboxes
     return new_data
