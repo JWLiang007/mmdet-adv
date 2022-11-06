@@ -58,7 +58,11 @@ def single_gpu_adv(model,
 
             for i, (img, img_meta) in enumerate(zip(imgs, img_metas)):
                 h, w, _ = img_meta['img_shape']
-                img_show = img[:h, :w, :]
+                if 'border' in img_meta.keys():
+                    h_s , h_t, w_s, w_t = img_meta['border'].astype(np.uint32)
+                    img_show = img[h_s:h_t,w_s:w_t,:]
+                else:
+                    img_show = img[:h, :w, :]
 
                 ori_h, ori_w = img_meta['ori_shape'][:-1]
                 img_show = mmcv.imresize(img_show, (ori_w, ori_h))
