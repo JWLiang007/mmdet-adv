@@ -243,7 +243,8 @@ def main():
         json_file = osp.join(args.work_dir, f'eval_{timestamp}.json')
 
     # build the dataloader
-    for p_cfg in  cfg.data.train.pipeline:
+    train_pipeline = cfg.data.train.pipeline if 'pipeline' in cfg.data.train.keys() else cfg.data.train.dataset.pipeline
+    for p_cfg in  train_pipeline:
         if 'type' in p_cfg.keys() :
             if p_cfg['type'] == 'LoadAnnotations':
                 cfg.data.test.pipeline.insert(1,p_cfg)
