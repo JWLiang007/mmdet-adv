@@ -252,7 +252,7 @@ def main():
             if p_cfg['type'] == 'DefaultFormatBundle':
                 # cfg.data.test.pipeline[-1].transforms.pop(-2)
                 # cfg.data.test.pipeline[-1].transforms.insert(-1, p_cfg)
-                replace_ImageToTensor(cfg.data.test.pipeline)
+                cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
     if len(cfg.data.test.pipeline) == 2:
         if 'gt_masks' not in  cfg.data.test.pipeline[-1].transforms[-1]['keys'] :
             cfg.data.test.pipeline.insert(1,ConfigDict(type='LoadAnnotations', with_bbox=True))

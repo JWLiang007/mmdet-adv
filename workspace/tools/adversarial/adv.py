@@ -16,6 +16,10 @@ from .mifgsm import  MIFGSM
 from .vmifgsm import VMIFGSM
 from .fgsm import FGSM
 from .bim import BIM
+from .nes import NES
+from .zss import ZSS
+from .sign_hunter import SIGN_HUNTER
+from .square_attack import SquareAttack
 import numpy as np
 from mmcv.parallel.data_container import DataContainer
 from mmcv.image import tensor2imgs
@@ -28,7 +32,11 @@ ta_factory = {
     'mifgsm': MIFGSM,
     'vmifgsm': VMIFGSM,
     'fgsm':FGSM,
-    'bim':BIM
+    'bim':BIM,
+    'nes':NES,
+    'zss':ZSS,
+    'sign_hunter':SIGN_HUNTER,
+    'square_attack':SquareAttack
 }
 
 
