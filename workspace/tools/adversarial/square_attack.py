@@ -26,16 +26,17 @@ class SquareAttack(Attack):
         new_data = {}
         new_data['img_metas'] = data['img_metas'][0].data[0]
         
-        # test_data = {}
-        # test_data['img_metas'] = data['img_metas'][0].data[0
-        self.steps = self.steps 
+        test_data = {}
+        test_data['img_metas'] = data['img_metas'][0].data[0]
+        qps = 100
+        steps = self.steps *qps
         
         self.is_new_batch = True
         xs = adv_images.clone()
         c, h, w = adv_images.shape[1:]
         n_features = c*h*w
         n_queries = torch.zeros(adv_images.shape[0])
-        for i in range(self.steps):
+        for i in range(steps):
             # test_data['img'] = adv_images
             # print('loss_',i," : ", self.model.module._parse_losses(self.model(**test_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],gt_labels=data['gt_labels'][0].data[0])))
 
@@ -82,6 +83,10 @@ class SquareAttack(Attack):
             self.i += 1
             
             self.is_new_batch = False
+            
+            if i % qps == 0:
+                test_data['img'] = x_new
+                print('loss_',i," : ", self.model.module._parse_losses(self.model(**test_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],gt_labels=data['gt_labels'][0].data[0])))
             
 
         adv_images = x_new

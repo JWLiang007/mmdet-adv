@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from .attack import Attack
 from collections import Iterable
-
+import math
 
 class NES(Attack):
     r"""
@@ -55,13 +55,13 @@ class NES(Attack):
         new_data = {}
         new_data['img_metas'] = data['img_metas'][0].data[0]
         
-        # test_data = {}
-        # test_data['img_metas'] = data['img_metas'][0].data[0]
+        test_data = {}
+        test_data['img_metas'] = data['img_metas'][0].data[0]
         qps = 100
-        alpha = alpha / torch.sqrt(qps) 
+        alpha = alpha / math.sqrt(qps)
         for i in range(self.steps):
-            # test_data['img'] = adv_images
-            # print('loss_',i," : ", self.model.module._parse_losses(self.model(**test_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],gt_labels=data['gt_labels'][0].data[0])))
+            test_data['img'] = adv_images
+            print('loss_',i," : ", self.model.module._parse_losses(self.model(**test_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],gt_labels=data['gt_labels'][0].data[0])))
             grad = 0
             # adv_images.requires_grad = True
             for j in range(qps):

@@ -30,12 +30,12 @@ class SIGN_HUNTER(Attack):
         test_data['img_metas'] = data['img_metas'][0].data[0]
         
         # param 
-        qps = 1000
-        self.steps = self.steps *  qps 
+        qps = 100
+        steps = self.steps *  qps 
 
         new_xs=adv_images.clone()
         self.is_new_batch = True
-        for i in range(self.steps):
+        for i in range(steps):
         # i=0
         # while True:
             if i % qps == 0:
