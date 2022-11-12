@@ -13,9 +13,9 @@ from mmdet.core import get_classes
 from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from mmdet.models import build_detector
+from mmdet.utils import  build_dp,get_device
 
-
-def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
+def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None,args=None ):
     """Initialize a detector from config file.
 
     Args:
@@ -40,17 +40,24 @@ def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
         config.model.pretrained = None
     elif 'init_cfg' in config.model.backbone:
         config.model.backbone.init_cfg = None
-    config.model.train_cfg = None
+    if args is None : 
+        config.model.train_cfg = None
     model = build_detector(config.model, test_cfg=config.get('test_cfg'))
+    if args is not None : 
+        model = build_dp(model, get_device(), device_ids=[args.gpu_id])
     if checkpoint is not None:
         checkpoint = load_checkpoint(model, checkpoint, map_location='cpu')
         if 'CLASSES' in checkpoint.get('meta', {}):
             model.CLASSES = checkpoint['meta']['CLASSES']
+            if args is not None : 
+                model.module.CLASSES = checkpoint['meta']['CLASSES']
         else:
             warnings.simplefilter('once')
             warnings.warn('Class names are not saved in the checkpoint\'s '
                           'meta data, use COCO classes by default.')
             model.CLASSES = get_classes('coco')
+            if args is not None : 
+                model.module.CLASSES = checkpoint['meta']['CLASSES']
     model.cfg = config  # save the config in the model for convenience
     model.to(device)
     model.eval()
@@ -90,7 +97,7 @@ class LoadImage:
         return results
 
 
-def inference_detector(model, imgs):
+def inference_detector(model, imgs,return_meta = False ):
     """Inference image(s) with the detector.
 
     Args:
@@ -134,6 +141,8 @@ def inference_detector(model, imgs):
         datas.append(data)
 
     data = collate(datas, samples_per_gpu=len(imgs))
+    if return_meta:
+        return data
     # just get the actual data from DataContainer
     data['img_metas'] = [img_metas.data[0] for img_metas in data['img_metas']]
     data['img'] = [img.data[0] for img in data['img']]
