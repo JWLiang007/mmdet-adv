@@ -118,6 +118,7 @@ def parse_args():
         type=float,
         default=0.0,
         help='pseudo label score threshold (default: 0.0)')
+    parser.add_argument('--p-init', type=float, default=0.9, help='initial p for square attack')
     parser.add_argument('--with-gt', action='store_true', help='attack with ground truth')
     parser.add_argument('--method', type=str, default='difgsm', help='attack method')
     parser.add_argument('--eps', type=float, default=15, help='maximum perturbation')

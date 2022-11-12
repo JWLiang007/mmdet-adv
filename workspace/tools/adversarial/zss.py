@@ -58,8 +58,7 @@ class ZSS(Attack):
         # test_data = {}
         # test_data['img_metas'] = data['img_metas'][0].data[0]
         qps = 100
-        self.steps = self.steps * 10 
-        alpha = alpha/ 10 
+        alpha = alpha/ torch.sqrt(qps)
         for i in range(self.steps):
             # test_data['img'] = adv_images
             # print('loss_',i," : ", self.model.module._parse_losses(self.model(**test_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],gt_labels=data['gt_labels'][0].data[0])))
@@ -67,7 +66,7 @@ class ZSS(Attack):
             # adv_images.requires_grad = True
             for j in range(qps):
                 noise = torch.randn_like(adv_images) 
-                noise = noise * alpha / (torch.max(noise)*(qps/2))
+                noise = noise * alpha / (torch.max(noise))
                 f_img = adv_images + noise
                 b_img = adv_images
                 with torch.no_grad():

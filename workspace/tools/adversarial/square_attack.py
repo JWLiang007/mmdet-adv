@@ -6,36 +6,13 @@ from collections import Iterable
 import numpy as np
 
 class SquareAttack(Attack):
-    r"""
-    BIM or iterative-FGSM in the paper 'Adversarial Examples in the Physical World'
-    [https://arxiv.org/abs/1607.02533]
 
-    Distance Measure : Linf
-
-    Arguments:
-        model (nn.Module): model to attack.
-        eps (float): maximum perturbation. (Default: 8/255)
-        alpha (float): step size. (Default: 2/255)
-        steps (int): number of steps. (Default: 10)
-
-    .. note:: If steps set to 0, steps will be automatically decided following the paper.
-
-    Shape:
-        - images: :math:`(N, C, H, W)` where `N = number of batches`, `C = number of channels`,        `H = height` and `W = width`. It must have a range [0, 1].
-        - labels: :math:`(N)` where each value :math:`y_i` is :math:`0 \leq y_i \leq` `number of labels`.
-        - output: :math:`(N, C, H, W)`.
-
-    Examples::
-        >>> attack = torchattacks.BIM(model, eps=8/255, alpha=2/255, steps=10)
-        >>> adv_images = attack(images, labels)
-    """
     def __init__(self, model, args):
-        super().__init__("BIM", model)
+        super().__init__("SquareAttack", model)
         self.eps = args.eps
         self.steps = args.steps
-        self.alpha = args.alpha
         self.supported_mode = ['default', 'targeted']
-        self.p_init = 0.05
+        self.p_init = args.p_init
 
     def forward(self, data):
         r"""
@@ -44,17 +21,14 @@ class SquareAttack(Attack):
         images = data['img'][0].data[0].clone().detach().to(self.device)
         ub,lb = torch.max(images.view(3,-1),dim=1).values,torch.min(images.view(3,-1),dim=1).values
         eps = self.eps * torch.max(ub - lb )
-        alpha = self.alpha * torch.max(ub - lb)
 
         adv_images = images.clone().detach()
         new_data = {}
         new_data['img_metas'] = data['img_metas'][0].data[0]
         
         # test_data = {}
-        # test_data['img_metas'] = data['img_metas'][0].data[0]
-        qps = 100
-        self.steps = self.steps * 10 
-        alpha = alpha/ 10 
+        # test_data['img_metas'] = data['img_metas'][0].data[0
+        self.steps = self.steps 
         
         self.is_new_batch = True
         xs = adv_images.clone()
@@ -64,7 +38,6 @@ class SquareAttack(Attack):
         for i in range(self.steps):
             # test_data['img'] = adv_images
             # print('loss_',i," : ", self.model.module._parse_losses(self.model(**test_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],gt_labels=data['gt_labels'][0].data[0])))
-            grad = 0
 
             if self.is_new_batch:
                 self.x = xs.clone()
@@ -96,7 +69,6 @@ class SquareAttack(Attack):
                     for chn in range(xs.shape[1]):
                         _win[chn:chn+1,:,:] = torch.clamp(_win[chn:chn+1,:,:], min=lb[chn], max=ub[chn]).detach()
                     
-            # x_new = torch.clamp(self.x + deltas, self.lb, self.ub).permute(0,2,3,1)
             x_new = self.x.clone()
             for chn in range(xs.shape[1]):
                 x_new[:,chn:chn+1,:,:] = torch.clamp(self.x[:,chn:chn+1,:,:] + deltas[:,chn:chn+1,:,:], min=lb[chn], max=ub[chn]).detach()
@@ -104,14 +76,13 @@ class SquareAttack(Attack):
             n_queries += torch.ones(xs.shape[0])
             idx_improved = new_loss > self.best_loss
             self.best_loss = idx_improved * new_loss + ~idx_improved * self.best_loss
-            # xs = xs.permute(0,2,3,1)
+
             idx_improved = torch.reshape(idx_improved, [-1, *[1]*len(x_new.shape[:-1])])
             x_new = idx_improved * x_new + ~idx_improved * xs
             self.i += 1
             
             self.is_new_batch = False
             
-            # grad = adv_images.grad.data
 
         adv_images = x_new
         delta = torch.clamp(adv_images - images, min=-eps, max=eps)
