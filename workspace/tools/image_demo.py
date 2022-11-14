@@ -11,9 +11,9 @@ import os
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument('img', help='Image file')
-    parser.add_argument('config', help='Config file')
-    parser.add_argument('checkpoint', help='Checkpoint file')
+    parser.add_argument('--img',default=None, help='Image file')
+    parser.add_argument('--config', default=None,help='Config file')
+    parser.add_argument('--checkpoint',default=None, help='Checkpoint file')
     parser.add_argument('--out-dir', default=None, help='Path to output dir')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')
@@ -37,11 +37,15 @@ def parse_args():
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(
+        '--test-cfg',type=str, default=None, help='config of test model ')
+    parser.add_argument(
+        '--test-checkpoint',type=str, default=None, help='checkpoint of test model ')
+    parser.add_argument(
         '--score-thr',
         type=float,
         default=0.0,
         help='pseudo label score threshold (default: 0.0)')
-    parser.add_argument('--p-init', type=float, default=0.9, help='initial p for square attack')
+    parser.add_argument('--p-init', type=float, default=0.05, help='initial p for square attack')
     parser.add_argument('--with-gt', action='store_true', help='attack with ground truth')
     parser.add_argument('--method', type=str, default='difgsm', help='attack method')
     parser.add_argument('--eps', type=float, default=15, help='maximum perturbation')
@@ -65,7 +69,7 @@ def parse_args():
 
 
 
-def main(args):
+def main(args=parse_args()):
     # build the model from a config file and a checkpoint file
     model = init_detector(args.config, args.checkpoint, device=args.device,args=args)
     # test a single image
@@ -79,6 +83,8 @@ def main(args):
         score_thr=args.show_score_thr,
         out_file=os.path.join(args.out_dir,'ori.png'))
     adv_result = single_gpu_adv(model,img_meta,args)
+    if args.test_cfg is not None and args.test_checkpoint is not None:
+        model = init_detector(args.test_cfg, args.test_checkpoint, device=args.device,args=args)
     show_result_pyplot(
         model,
         args.img,

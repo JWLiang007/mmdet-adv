@@ -77,10 +77,11 @@ class DIFGSM(Attack):
             else:
                 losses = self.model(**new_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],
                                 gt_labels=data['gt_labels'][0].data[0])
-                try:
-                    loss_cls = sum(_loss.mean() for _loss in losses['loss_cls']) 
-                except:
-                    loss_cls = losses['loss_cls']
+                # try:
+                #     loss_cls = sum(_loss.mean() for _loss in losses['loss_cls']) 
+                # except:
+                #     loss_cls = losses['loss_cls']
+                loss_cls ,_ = self.model.module._parse_losses(losses)
             self.model.zero_grad()
             loss_cls= loss_cls* (-1.0)
             loss_cls.backward()
