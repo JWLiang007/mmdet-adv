@@ -66,7 +66,21 @@ def parse_args():
     args.alpha = args.alpha / 255.0
     return args
 
-
+def _det2json(result,classes,score_thr):
+    """Convert detection results to COCO json style."""
+    json_results = []
+    for label in range(len(result)):
+        bboxes = result[label]
+        for i in range(bboxes.shape[0]):
+            data = dict()
+            data['score'] = float(bboxes[i][4])
+            if data['score'] < score_thr:
+                continue
+            data['bbox'] = bboxes[i]
+            data['category_id'] = label
+            data['category'] = classes[label]
+            json_results.append(data)
+    return json_results
 
 
 def main(args=parse_args()):
@@ -93,6 +107,9 @@ def main(args=parse_args()):
         score_thr=args.show_score_thr,
         out_file=os.path.join(args.out_dir,'adv.png'))
     # show the results
+    ori_info = _det2json(ori_result,model.CLASSES,args.show_score_thr)
+    adv_info = _det2json(adv_result,model.CLASSES,args.show_score_thr)
+    return ori_info,adv_info
 
 
 
