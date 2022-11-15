@@ -55,12 +55,13 @@ def parse_args():
     parser.add_argument('--resize_rate', type=float, default=0.9, help='resize factor used in input diversity')
     parser.add_argument('--diversity_prob', type=float, default=0.5,
                         help='the probability of applying input diversity of difgsm/tifgsm')
-    parser.add_argument('--random_start', action='store_true', help='using random initialization of delta')
+    parser.add_argument('--random_start', type=bool,default=True, help='using random initialization of delta')
     parser.add_argument('--kernel_name', type=str, default='gaussian',help='kernel name of tifgsm')
     parser.add_argument('--len_kernel', type=int, default=15, help='kernel length of tifgsm')
     parser.add_argument('--nsig', type=int, default=3, help=' radius of gaussian kernel of tisgsm')
     parser.add_argument('--beta', type=float, default=1.5, help=' the upper bound of neighborhood of vmifgsm')
     parser.add_argument('--N', type=int, default=20, help=' the number of sampled examples in the neighborhood')
+    parser.add_argument('--overshoot', type=float, default=0.02, help='overshoot (float): parameter for enhancing the noise. (Default: 0.02)')
     args = parser.parse_args()
     args.eps = args.eps / 255.0
     args.alpha = args.alpha / 255.0

@@ -1,6 +1,6 @@
 
 import numpy as np
-
+import torch 
 def get_gt_bboxes_scores_and_labels(Anns, cat2label, img_name, scale_factor, ncls, scale_flag=None):
     bboxes = []
     scores = []
@@ -28,3 +28,10 @@ def get_gt_bboxes_scores_and_labels(Anns, cat2label, img_name, scale_factor, ncl
     for i in range(len(labels)):
         scores[i, labels[i]] = 1.0
     return bboxes, scores, labels
+
+
+def mmdet_clamp(img,lb,ub):
+    assert img.shape[1] == lb.shape[0] and img.shape[1] ==  ub.shape[0]
+    for chn in range(img.shape[1]):
+        img[:,chn:chn+1,:,:] = torch.clamp(img[:,chn:chn+1,:,:], min=lb[chn], max=ub[chn]).detach()
+    return img

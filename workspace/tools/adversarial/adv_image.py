@@ -20,6 +20,9 @@ from .nes import NES
 from .zss import ZSS
 from .sign_hunter import SIGN_HUNTER
 from .square_attack import SquareAttack
+from .pgd import PGD
+from .nifgsm import NIFGSM
+from .deepfool import DeepFool
 import numpy as np
 from mmcv.parallel.data_container import DataContainer
 from mmcv.image import tensor2imgs
@@ -36,7 +39,10 @@ ta_factory = {
     'nes':NES,
     'zss':ZSS,
     'sign_hunter':SIGN_HUNTER,
-    'square_attack':SquareAttack
+    'square_attack':SquareAttack,
+    'pgd':PGD,
+    'nifgsm':NIFGSM,
+    'deepfool':DeepFool
 }
 
 

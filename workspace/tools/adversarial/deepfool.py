@@ -2,23 +2,20 @@ import torch
 import torch.nn as nn
 
 from .attack import Attack
-from collections import Iterable
 from .util import mmdet_clamp
 
-class BIM(Attack):
-    r"""
-    BIM or iterative-FGSM in the paper 'Adversarial Examples in the Physical World'
-    [https://arxiv.org/abs/1607.02533]
 
-    Distance Measure : Linf
+class DeepFool(Attack):
+    r"""
+    'DeepFool: A Simple and Accurate Method to Fool Deep Neural Networks'
+    [https://arxiv.org/abs/1511.04599]
+
+    Distance Measure : L2
 
     Arguments:
         model (nn.Module): model to attack.
-        eps (float): maximum perturbation. (Default: 8/255)
-        alpha (float): step size. (Default: 2/255)
-        steps (int): number of steps. (Default: 10)
-
-    .. note:: If steps set to 0, steps will be automatically decided following the paper.
+        steps (int): number of steps. (Default: 50)
+        overshoot (float): parameter for enhancing the noise. (Default: 0.02)
 
     Shape:
         - images: :math:`(N, C, H, W)` where `N = number of batches`, `C = number of channels`,        `H = height` and `W = width`. It must have a range [0, 1].
@@ -26,15 +23,15 @@ class BIM(Attack):
         - output: :math:`(N, C, H, W)`.
 
     Examples::
-        >>> attack = torchattacks.BIM(model, eps=8/255, alpha=2/255, steps=10)
+        >>> attack = torchattacks.DeepFool(model, steps=50, overshoot=0.02)
         >>> adv_images = attack(images, labels)
+
     """
     def __init__(self, model, args):
-        super().__init__("BIM", model)
-        self.eps = args.eps
-        self.steps = args.steps
-        self.alpha = args.alpha
-        self.supported_mode = ['default', 'targeted']
+        super().__init__("DeepFool", model)
+        self.steps = args.steps * 10
+        self.overshoot = args.overshoot
+        self.supported_mode = ['default']
 
     def forward(self, data):
         r"""
@@ -42,9 +39,6 @@ class BIM(Attack):
         """
         images = data['img'][0].data[0].clone().detach().to(self.device)
         ub,lb = torch.max(images.view(3,-1),dim=1).values,torch.min(images.view(3,-1),dim=1).values
-        eps = self.eps * torch.max(ub - lb )
-        alpha = self.alpha * torch.max(ub - lb)
- 
         adv_images = images.clone().detach()
         new_data = {}
         new_data['img_metas'] = data['img_metas'][0].data[0]
@@ -52,9 +46,7 @@ class BIM(Attack):
 
         for i in range(self.steps):
             adv_images.requires_grad = True
-
             new_data['img'] = adv_images
-
             if 'gt_masks' in data.keys():
                 losses = self.model(**new_data, return_loss=True,gt_bboxes=data['gt_bboxes'][0].data[0],
                                 gt_labels=data['gt_labels'][0].data[0], gt_masks=  data['gt_masks'][0].data[0])
@@ -66,12 +58,8 @@ class BIM(Attack):
             self.model.zero_grad()
             loss_cls.backward()
             grad = adv_images.grad.data
-
-            adv_images = adv_images.detach() + alpha * grad.sign()
-            delta = torch.clamp(adv_images - images, min=-eps, max=eps)
-
-            # for chn in range(adv_images.shape[1]):
-            #     adv_images[:,chn:chn+1,:,:] = torch.clamp(images[:,chn:chn+1,:,:] + delta[:,chn:chn+1,:,:], min=lb[chn], max=ub[chn]).detach()
-            adv_images = mmdet_clamp(images+delta,lb,ub)
-            data['img'][0].data[0] = adv_images
+            delta = grad / (torch.norm(grad, p=2)**2)
+            adv_images = adv_images.detach() + (1+self.overshoot)*delta
+        adv_images = mmdet_clamp(adv_images,lb,ub)
+        data['img'][0].data[0] = adv_images
         return adv_images

@@ -5,10 +5,10 @@ from .attack import Attack
 from collections import Iterable
 from .util import mmdet_clamp
 
-class BIM(Attack):
+class PGD(Attack):
     r"""
-    BIM or iterative-FGSM in the paper 'Adversarial Examples in the Physical World'
-    [https://arxiv.org/abs/1607.02533]
+    PGD in the paper 'Towards Deep Learning Models Resistant to Adversarial Attacks'
+    [https://arxiv.org/abs/1706.06083]
 
     Distance Measure : Linf
 
@@ -17,8 +17,7 @@ class BIM(Attack):
         eps (float): maximum perturbation. (Default: 8/255)
         alpha (float): step size. (Default: 2/255)
         steps (int): number of steps. (Default: 10)
-
-    .. note:: If steps set to 0, steps will be automatically decided following the paper.
+        random_start (bool): using random initialization of delta. (Default: True)
 
     Shape:
         - images: :math:`(N, C, H, W)` where `N = number of batches`, `C = number of channels`,        `H = height` and `W = width`. It must have a range [0, 1].
@@ -26,14 +25,16 @@ class BIM(Attack):
         - output: :math:`(N, C, H, W)`.
 
     Examples::
-        >>> attack = torchattacks.BIM(model, eps=8/255, alpha=2/255, steps=10)
+        >>> attack = torchattacks.PGD(model, eps=8/255, alpha=1/255, steps=10, random_start=True)
         >>> adv_images = attack(images, labels)
+
     """
     def __init__(self, model, args):
-        super().__init__("BIM", model)
+        super().__init__("PGD", model)
         self.eps = args.eps
-        self.steps = args.steps
         self.alpha = args.alpha
+        self.steps = args.steps
+        self.random_start = args.random_start
         self.supported_mode = ['default', 'targeted']
 
     def forward(self, data):
@@ -44,13 +45,19 @@ class BIM(Attack):
         ub,lb = torch.max(images.view(3,-1),dim=1).values,torch.min(images.view(3,-1),dim=1).values
         eps = self.eps * torch.max(ub - lb )
         alpha = self.alpha * torch.max(ub - lb)
- 
+
         adv_images = images.clone().detach()
         new_data = {}
         new_data['img_metas'] = data['img_metas'][0].data[0]
 
+        if self.random_start:
+            # Starting at a uniformly random point
+            adv_images = adv_images + torch.empty_like(adv_images).uniform_(-self.eps, self.eps)
+            adv_images = mmdet_clamp(adv_images,lb,ub)
+            # for chn in range(adv_images.shape[1]):
+            #     adv_images[:,chn:chn+1,:,:] = torch.clamp(adv_images[:,chn:chn+1,:,:], min=lb[chn], max=ub[chn]).detach()
 
-        for i in range(self.steps):
+        for _ in range(self.steps):
             adv_images.requires_grad = True
 
             new_data['img'] = adv_images
