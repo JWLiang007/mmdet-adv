@@ -62,6 +62,9 @@ def parse_args():
     parser.add_argument('--beta', type=float, default=1.5, help=' the upper bound of neighborhood of vmifgsm')
     parser.add_argument('--N', type=int, default=20, help=' the number of sampled examples in the neighborhood')
     parser.add_argument('--overshoot', type=float, default=0.02, help='overshoot (float): parameter for enhancing the noise. (Default: 0.02)')
+    parser.add_argument('--norm', type=str, default='Linf', help='Lp-norm of the attack.')
+    parser.add_argument('--n_queries', type=int, default=500, help='max number of queries (each restart). (Default: 500)')
+    parser.add_argument('--n_restarts', type=int, default=1, help='number of random restarts. ')
     args = parser.parse_args()
     args.eps = args.eps / 255.0
     args.alpha = args.alpha / 255.0
