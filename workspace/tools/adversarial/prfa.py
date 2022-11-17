@@ -64,6 +64,7 @@ class PRFA(Attack):
         self.flip_flag = False
         self.flip_deltas = None 
         self.flip_zone = None 
+        self.score_thr = 0.3
         self.supported_mode = ['default', 'targeted']
 
     def forward(self,data):
@@ -247,7 +248,10 @@ class PRFA(Attack):
 
                     if not self.flip_flag:
                         _data['img'][0].data[0] = x_best_curr
-                        _new_data= det2gt(_data,self.model,0.0)
+                        _new_data= det2gt(_data,self.model,self.score_thr)
+                        if len(_new_data['gt_bboxes'][0].data[0][0]) == 0:
+                            self.score_thr = 0.0 
+                            continue
                         # bboxes = _new_data['gt_bboxes'][0].data[0][0]
                         # attack_points = []
                         # for bbox in bboxes:
