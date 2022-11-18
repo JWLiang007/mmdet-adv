@@ -128,3 +128,5 @@ workspace/checkpoints/
 workspace/data/
 /workspace/nohup.out
 /workspace/run.sh
+/DPA_mmdet-master/res/
+/DPA_mmdet-master/det/

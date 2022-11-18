@@ -3,7 +3,8 @@ import moderngl
 from objects import Obj
 from pyrr import Matrix44
 import numpy as np
-
+import random 
+import math
 
 class Renderer(object):
 
@@ -15,9 +16,9 @@ class Renderer(object):
         """
         super(Renderer, self).__init__()
         self.width, self.height = viewport
-
+        self.aspect_ratio = self.width / self.height
         # require OpenGL 330 core profile
-        self.ctx = moderngl.create_standalone_context(require=330)
+        self.ctx = moderngl.create_standalone_context(require=330,backend="egl")
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.CULL_FACE)
 
@@ -62,6 +63,8 @@ class Renderer(object):
 
         self.mvp = self.prog['mvp']
 
+
+
     def load_obj(self, filename):
         if not os.path.isfile(filename):
             print('{} is not an existing regular file!'.format(filename))
@@ -95,6 +98,7 @@ class Renderer(object):
         self.y_low, self.y_high = y_translation
         self.deflection = deflection
 
+    
     @staticmethod
     def rand_rotation_matrix(deflection=1.0, randnums=None):
         """
@@ -110,7 +114,7 @@ class Renderer(object):
         theta, phi, z = randnums
 
         # Rotation about the pole (Z).
-        theta = theta * 2.0 * deflection * np.pi
+        theta = 1 * 2.0 * deflection * np.pi
         phi = phi * 2.0 * np.pi  # For direction of pole deflection.
         z = z * 2.0 * deflection  # For magnitude of pole deflection.
 
@@ -131,36 +135,60 @@ class Renderer(object):
         st = np.sin(theta)
         ct = np.cos(theta)
 
-        R = np.array(((ct, st, 0), (-st, ct, 0), (0, 0, 1)))
+        R = np.array(((ct,0, st), (0,1, 0), (-st,0, ct)))
 
         # Construct the rotation matrix  ( V Transpose(V) - I ) R.
         M = (np.outer(V, V) - np.eye(3)).dot(R)
 
-        return M
+        return R
 
     def render(self, batch_size):
         warp = np.empty(
             (batch_size, self.height, self.width, 2), dtype=np.float32)
         for i in range(batch_size):
+            # translation = Matrix44.from_translation((
+            #     np.random.uniform(self.x_low, self.x_high),
+            #     np.random.uniform(self.y_low, self.y_high),
+            #     0.0
+            # ))
+            # rotation = Matrix44.from_matrix33(
+            #     self.rand_rotation_matrix(self.deflection)
+            # )
+            # view = Matrix44.look_at(
+            #     (0.0, 0.0, np.random.uniform(self.close, self.far)),
+            #     (0.0, 0.0, 0.0),
+            #     (0.0, 1.0, 0.0),
+            # )
+            # projection = Matrix44.perspective_projection(
+            #     45.0, self.width / self.height, 0.1, 1000.0
+            # )
+
+            # # TODO: translation or rotation first?
+            # transform = projection * view * translation * rotation
+            self.a = random.random()
+            disturbance = 1
+            distance = 150 * disturbance
             translation = Matrix44.from_translation((
-                np.random.uniform(self.x_low, self.x_high),
-                np.random.uniform(self.y_low, self.y_high),
+                np.random.uniform(-distance ,distance),
+                np.random.uniform(-(100+distance), -100),
                 0.0
             ))
             rotation = Matrix44.from_matrix33(
-                self.rand_rotation_matrix(self.deflection)
+                self.rand_rotation_matrix(self.a)
             )
+            theta = np.sign(random.random()-0.5) * ( random.uniform(0.5,1.57)) 
+            r = 300 + random.uniform(0,500) * disturbance
             view = Matrix44.look_at(
-                (0.0, 0.0, np.random.uniform(self.close, self.far)),
+                (0.0, r*math.cos(theta),  r*math.sin(theta)),
                 (0.0, 0.0, 0.0),
                 (0.0, 1.0, 0.0),
             )
             projection = Matrix44.perspective_projection(
-                45.0, self.width / self.height, 0.1, 1000.0
+                90.0, self.aspect_ratio, 1.0, 1000.0
             )
 
             # TODO: translation or rotation first?
-            transform = projection * view * translation * rotation
+            transform = projection * view  * translation * rotation
 
             self.fbo.use()
             self.fbo.clear()

@@ -45,7 +45,7 @@ def main():
 
     for frame in mmcv.track_iter_progress(video_reader):
         result = inference_detector(model, frame)
-        frame = model.show_result(frame, result, score_thr=args.score_thr)
+        frame = model.show_result(frame, result, score_thr=args.score_thr,bbox_color='coco',)
         if args.show:
             cv2.namedWindow('video', 0)
             mmcv.imshow(frame, 'video', args.wait_time)
