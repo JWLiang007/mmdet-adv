@@ -165,15 +165,7 @@ for trans in test_pipeline[1].transforms:
         trans['to_rgb'] = False
         mean = trans['mean']
         std = trans['std']
-# test_pipeline = [LoadImageFromWebcam()]+\
-#                 [{'type': 'MultiScaleFlipAug', 'img_scale': render_size, 'flip': False,
-#                  'transforms': [
-#                      {'type': 'Resize', 'keep_ratio': True},
-#                      {'type': 'RandomFlip'},
-#                      {'type': 'Normalize', 'mean': [123.675, 116.28, 103.53], 'std': [58.395, 57.12, 57.375], 'to_rgb': False},
-#                      {'type': 'Pad', 'size_divisor': 1},
-#                      {'type': 'ImageToTensor', 'keys': ['img']},
-#                      {'type': 'Collect', 'keys': ['img']}]}]
+
 test_pipeline = Compose(test_pipeline)
 
 nor = transforms.Normalize(mean,std)
