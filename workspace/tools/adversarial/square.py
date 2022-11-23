@@ -54,6 +54,7 @@ class Square(Attack):
         self.eps = args.eps
         self.p_init = args.p_init
         self.n_restarts = args.n_restarts
+        self.defense = args.defense
         self.seed = 0
         self.verbose = False
         # self.loss = loss
@@ -215,7 +216,11 @@ class Square(Attack):
                 #     [x.shape[0], c, 1, w]), 0., 1.)
                 x_best =  mmdet_clamp(x + self._eps * self.random_choice(
                     [x.shape[0], c, 1, w]),self.lb,self.ub)
-                loss_min = self.losses(x_best,data)
+                if self.defense:
+                    noise = torch.randn_like(x_best) * self._eps
+                    loss_min = self.losses(x_best+noise,data)
+                else:
+                    loss_min = self.losses(x_best,data)
                 # margin_min, loss_min = self.margin_and_loss(x_best, y)
                 n_queries = torch.ones(x.shape[0]).to(self.device)
                 s_init = int(math.sqrt(self.p_init * n_features / c))
@@ -248,9 +253,12 @@ class Square(Attack):
                     x_new = mmdet_clamp(x_new,self.lb,self.ub)
                     # torch.clamp(x_new, 0., 1.)
                     x_new = self.check_shape(x_new)
-                    
-                    # margin, loss = self.margin_and_loss(x_new, y_curr)
-                    loss = self.losses(x_new,data)
+                    if self.defense:
+                        noise = torch.randn_like(x_new) * self._eps
+                        # margin, loss = self.margin_and_loss(x_new, y_curr)
+                        loss = self.losses(x_new + noise,data)
+                    else:
+                        loss = self.losses(x_new ,data)
                     # update loss if new loss is better
                     idx_improved = (loss > loss_min_curr).float()
 

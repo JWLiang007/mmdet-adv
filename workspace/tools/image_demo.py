@@ -8,6 +8,7 @@ from mmcv.utils.config import ConfigDict
 from mmdet.datasets import replace_ImageToTensor
 from adversarial.adv_image import  single_gpu_adv
 import os 
+from copy import deepcopy
 
 def parse_args():
     parser = ArgumentParser()
@@ -65,6 +66,8 @@ def parse_args():
     parser.add_argument('--norm', type=str, default='Linf', help='Lp-norm of the attack.')
     parser.add_argument('--n_queries', type=int, default=500, help='max number of queries (each restart). (Default: 500)')
     parser.add_argument('--n_restarts', type=int, default=1, help='number of random restarts. ')
+    parser.add_argument('--defense', type=bool, default=False, help='preprocessing defense')
+
     args = parser.parse_args()
     args.eps = args.eps / 255.0
     args.alpha = args.alpha / 255.0
@@ -100,6 +103,17 @@ def main(args=parse_args()):
         palette=args.palette,
         score_thr=args.show_score_thr,
         out_file=os.path.join(args.out_dir,'ori.png'))
+    defense_result = None 
+    if args.defense:
+        defense_result = single_gpu_adv(model,img_meta,args)
+        show_result_pyplot(
+            model,
+            args.img,
+            defense_result,
+            palette=args.palette,
+            score_thr=args.show_score_thr,
+            out_file=os.path.join(args.out_dir,'defense.png'))
+        args.defense=False
     adv_result = single_gpu_adv(model,img_meta,args)
     if args.test_cfg is not None and args.test_checkpoint is not None:
         model = init_detector(args.test_cfg, args.test_checkpoint, device=args.device,args=args)
@@ -113,7 +127,10 @@ def main(args=parse_args()):
     # show the results
     ori_info = _det2json(ori_result,model.CLASSES,args.show_score_thr)
     adv_info = _det2json(adv_result,model.CLASSES,args.show_score_thr)
-    return ori_info,adv_info
+    defense_info = None 
+    if defense_result is not None :
+        defense_info = _det2json(defense_result,model.CLASSES,args.show_score_thr)
+    return ori_info,adv_info,defense_info
 
 
 

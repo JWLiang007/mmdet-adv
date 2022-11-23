@@ -130,3 +130,5 @@ workspace/data/
 /workspace/run.sh
 /DPA_mmdet-master/res/
 /DPA_mmdet-master/det/
+faster-rcnn-pytorch/voc/*.pth*
+faster-rcnn-pytorch/res/
