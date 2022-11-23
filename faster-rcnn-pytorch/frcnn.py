@@ -158,7 +158,9 @@ class FRCNN(object):
         thickness = max((np.shape(old_image)[0] + np.shape(old_image)[1]) // old_width * 2, 1)
                 
         image = old_image
+        det_infos = [] 
         for i, c in enumerate(label):
+            det_info = {}
             predicted_class = self.class_names[int(c)]
             score = conf[i]
 
@@ -173,6 +175,11 @@ class FRCNN(object):
             bottom = min(np.shape(image)[0], np.floor(bottom + 0.5).astype('int32'))
             right = min(np.shape(image)[1], np.floor(right + 0.5).astype('int32'))
 
+            det_info['class'] = predicted_class
+            det_info['score'] = score
+            det_info['bbox'] = bbox[i]
+            det_infos.append(det_info)
+            
             # 画框框
             label = '{} {:.2f}'.format(predicted_class, score)
             draw = ImageDraw.Draw(image)
@@ -197,8 +204,8 @@ class FRCNN(object):
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
             del draw
         if return_det:
-            return image, det_images,det_bbox,det_label,det_conf
-        return image
+            return image, det_images,det_bbox,det_label,det_conf,det_infos
+        return image,det_infos
 
     def get_FPS(self, image, test_interval):
         #-------------------------------------#

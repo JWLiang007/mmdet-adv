@@ -19,7 +19,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-if __name__ == "__main__":
+def main(args=parse_args()):
     args = parse_args()
     frcnn = FRCNN()
     if args.method == 'fgsm':
@@ -126,7 +126,7 @@ if __name__ == "__main__":
             print('Open Error! Try again!')
             # continue
         else:
-            ori_res, images, bbox, label, conf = frcnn.detect_image(image,return_det=True)
+            ori_res, images, bbox, label, conf ,ori_det_infos= frcnn.detect_image(image,return_det=True)
             bbox = np.expand_dims(bbox,0)
             label = np.expand_dims(label,0)
             # _label = np.zeros_like(label)
@@ -134,9 +134,9 @@ if __name__ == "__main__":
             # label = _label
             new_images = advt_method(images, bbox,label,1,return_img = True)
             new_images = Image.fromarray((new_images*255).clone().detach().squeeze(0).cpu().numpy().transpose(1,2,0).astype(np.uint8)).resize(image.size)
-            adv_res = frcnn.detect_image(new_images,return_det=False)
+            adv_res,adv_det_infos = frcnn.detect_image(new_images,return_det=False)
             
-            advt_res = advt_frcnn.detect_image(new_images,return_det=False)
+            advt_res,advt_det_infos = advt_frcnn.detect_image(new_images,return_det=False)
             base_dir = os.path.join('res',args.method)
             os.makedirs(base_dir,exist_ok=True)
             ori_res.save(os.path.join(base_dir,'ori_det.png'))
@@ -147,3 +147,9 @@ if __name__ == "__main__":
             # r_image.show()
     else:
         raise AssertionError("Please specify the correct mode: 'predict', 'video' or 'fps'.")
+
+    return ori_det_infos,adv_det_infos,advt_det_infos
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)
