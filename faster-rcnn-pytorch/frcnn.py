@@ -153,7 +153,7 @@ class FRCNN(object):
             bbox[:, 0::2] = (bbox[:, 0::2]) / width * old_width
             bbox[:, 1::2] = (bbox[:, 1::2]) / height * old_height
 
-        font = ImageFont.truetype(font='model_data/times.ttf',size=np.floor(3e-2 * np.shape(image)[1] + 0.5).astype('int32'))
+        font = ImageFont.truetype(font='model_data/times.ttf',size=np.floor(1e-2 * np.shape(image)[1] + 0.5).astype('int32'))
 
         thickness = max((np.shape(old_image)[0] + np.shape(old_image)[1]) // old_width * 2, 1)
                 
@@ -199,7 +199,7 @@ class FRCNN(object):
                     outline=self.colors[int(c)])
             draw.rectangle(
                 [tuple(text_origin), tuple(text_origin + label_size)],
-                fill=self.colors[int(c)])
+                fill=(156,156,156))
             # draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0))
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
             del draw

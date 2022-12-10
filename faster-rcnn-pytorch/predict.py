@@ -25,9 +25,11 @@ def main(args=parse_args()):
     if args.method == 'fgsm':
         advt_frcnn = FRCNN(model_path='/workspace/mmdetection/faster-rcnn-pytorch/voc/FGSM-AT.pth') 
         advt_method =  advt_frcnn.train_util.train_FGSM_step
+        adv_method = frcnn.train_util.train_FGSM_step
     elif args.method == 'pgd':
         advt_frcnn = FRCNN(model_path='/workspace/mmdetection/faster-rcnn-pytorch/voc/PGD-AT.pth') 
         advt_method =  advt_frcnn.train_util.train_PGD_step
+        adv_method = frcnn.train_util.train_FGSM_step
     elif args.method == 'square':
         advt_frcnn = frcnn
         advt_method =  advt_frcnn.train_util.train_SquareAttack_step
@@ -132,10 +134,12 @@ def main(args=parse_args()):
             # _label = np.zeros_like(label)
             # _label[label==0] = 1
             # label = _label
-            new_images = advt_method(images, bbox,label,1,return_img = True)
+            new_images = adv_method(images, bbox,label,1,return_img = True)
             new_images = Image.fromarray((new_images*255).clone().detach().squeeze(0).cpu().numpy().transpose(1,2,0).astype(np.uint8)).resize(image.size)
             adv_res,adv_det_infos = frcnn.detect_image(new_images,return_det=False)
             
+            new_images = advt_method(images, bbox,label,1,return_img = True)
+            new_images = Image.fromarray((new_images*255).clone().detach().squeeze(0).cpu().numpy().transpose(1,2,0).astype(np.uint8)).resize(image.size)
             advt_res,advt_det_infos = advt_frcnn.detect_image(new_images,return_det=False)
             base_dir = os.path.join('res',args.method)
             os.makedirs(base_dir,exist_ok=True)

@@ -5,7 +5,7 @@ from .attack import Attack
 from collections import Iterable
 import math 
 
-class ZSS(Attack):
+class ZOsignSGD(Attack):
     r"""
     BIM or iterative-FGSM in the paper 'Adversarial Examples in the Physical World'
     [https://arxiv.org/abs/1607.02533]
@@ -30,7 +30,7 @@ class ZSS(Attack):
         >>> adv_images = attack(images, labels)
     """
     def __init__(self, model, args):
-        super().__init__("ZSS", model)
+        super().__init__("ZOsignSGD", model)
         self.eps = args.eps
         self.steps = args.steps
         self.alpha = args.alpha

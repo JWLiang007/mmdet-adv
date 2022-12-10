@@ -494,7 +494,7 @@ class PRFA(Attack):
             # if ind_to_fool.numel() != 0:
             #     x_to_fool = x[ind_to_fool].clone()
             #     y_to_fool = y[ind_to_fool].clone()
-
+                self.flip_flag = False
                 adv_curr = self.attack_single_run(new_data,data)
 
                 # output_curr = self.get_logits(adv_curr)

@@ -15,8 +15,9 @@ std = torch.tensor(cifar10_std).view(3,1,1).cuda()
 
 upper_limit = ((1 - mu)/ std)
 lower_limit = ((0 - mu)/ std)
-epsilon = (15 / 255.) / std
-alpha = (4 / 255.) / std
+epsilon = (4 / 255.) / std
+alpha = (2 / 255.) / std
+steps = 3
 from attacker import *
 attacker = One_Layer_Attacker_01(eps=(2 / 225.) / std, input_channel=6).cuda()
 optimizer_att = torch.optim.SGD(attacker.parameters(), lr=0.01, momentum=0.9,
@@ -167,7 +168,7 @@ class FasterRCNNTrainer(nn.Module):
             delta[:, i, :, :].uniform_(-epsilon[i][0][0].item(), epsilon[i][0][0].item())
         delta.data = clamp(delta, lower_limit - imgs, upper_limit - imgs)
         delta.requires_grad = True
-        for _ in range(5):
+        for _ in range(steps):
             losses = self.forward(imgs + delta, bboxes, labels, scale)
             losses.total_loss.backward()
             grad = delta.grad.detach()

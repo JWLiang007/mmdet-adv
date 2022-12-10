@@ -24,6 +24,8 @@ from .nifgsm import NIFGSM
 from .deepfool import DeepFool
 from .square import Square
 from .prfa import PRFA
+from .jitter import Jitter
+from .zosignsgd import ZOsignSGD
 from .util import det2gt
 import numpy as np
 
@@ -45,7 +47,9 @@ ta_factory = {
     'pgd':PGD,
     'nifgsm':NIFGSM,
     'deepfool':DeepFool,
-    'prfa':PRFA
+    'prfa':PRFA,
+    'jitter': Jitter,
+    'ZOsignSGD':ZOsignSGD
 }
 
 
@@ -65,32 +69,32 @@ def single_gpu_adv(model,
         new_data = det2gt(data,model,args.score_thr)
     adv = attack(new_data)
 
-    batch_size = adv.shape[0]
-    if args.show_dir:
-        img_tensor = data['img'][0].data[0]
-        img_metas = data['img_metas'][0].data[0]
-        imgs = tensor2imgs(img_tensor.detach().clone(), **img_metas[0]['img_norm_cfg'])
-        assert len(imgs) == len(img_metas)
+    # batch_size = adv.shape[0]
+    # if args.show_dir:
+    img_tensor = data['img'][0].data[0]
+    img_metas = data['img_metas'][0].data[0]
+    imgs = tensor2imgs(img_tensor.detach().clone(), **img_metas[0]['img_norm_cfg'])
+    assert len(imgs) == len(img_metas)
 
-        for i, (img, img_meta) in enumerate(zip(imgs, img_metas)):
-            h, w, _ = img_meta['img_shape']
-            if 'border' in img_meta.keys():
-                h_s , h_t, w_s, w_t = img_meta['border'].astype(np.uint32)
-                img_show = img[h_s:h_t,w_s:w_t,:]
-            else:
-                img_show = img[:h, :w, :]
+    for i, (img, img_meta) in enumerate(zip(imgs, img_metas)):
+        h, w, _ = img_meta['img_shape']
+        if 'border' in img_meta.keys():
+            h_s , h_t, w_s, w_t = img_meta['border'].astype(np.uint32)
+            img_show = img[h_s:h_t,w_s:w_t,:]
+        else:
+            img_show = img[:h, :w, :]
 
-            ori_h, ori_w = img_meta['ori_shape'][:-1]
-            img_show = mmcv.imresize(img_show, (ori_w, ori_h))
-            if 'ori_filename' in img_meta.keys():
-                img_basename = os.path.basename(img_meta['ori_filename']) 
-            elif 'filename' in img_meta.keys() :
-                img_basename = os.path.basename(img_meta['filename'])
-            out_file = osp.join(args.show_dir, img_basename)
+        ori_h, ori_w = img_meta['ori_shape'][:-1]
+        img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+            # if 'ori_filename' in img_meta.keys():
+            #     img_basename = os.path.basename(img_meta['ori_filename']) 
+            # elif 'filename' in img_meta.keys() :
+            #     img_basename = os.path.basename(img_meta['filename'])
+            # out_file = osp.join(args.show_dir, img_basename)
 
-            mmcv.imwrite( img_show,out_file)
+            # mmcv.imwrite( img_show,out_file)
 
-    return model(return_loss=False, rescale=True, **data)[0]
+    return model(return_loss=False, rescale=True, **data)[0], img_show
 
 
 

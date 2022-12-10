@@ -6,9 +6,14 @@ from mmdet.apis import (async_inference_detector, inference_detector,
                         init_detector, show_result_pyplot)
 from mmcv.utils.config import ConfigDict
 from mmdet.datasets import replace_ImageToTensor
+from mmdet.core import BboxOverlaps2D
+from skimage.metrics import peak_signal_noise_ratio as psnr
 from adversarial.adv_image import  single_gpu_adv
 import os 
 from copy import deepcopy
+import numpy as np 
+import torch
+import cv2
 
 def parse_args():
     parser = ArgumentParser()
@@ -73,7 +78,7 @@ def parse_args():
     args.alpha = args.alpha / 255.0
     return args
 
-def _det2json(result,classes,score_thr):
+def _det2json(result,classes,score_thr,iou_est=False):
     """Convert detection results to COCO json style."""
     json_results = []
     for label in range(len(result)):
@@ -86,10 +91,25 @@ def _det2json(result,classes,score_thr):
             data['bbox'] = bboxes[i]
             data['category_id'] = label
             data['category'] = classes[label]
+            if iou_est:
+                data['iou_est'] = False
             json_results.append(data)
     return json_results
 
-
+def cal_iou(gt_info,adv_info):
+    adv_bbox=  torch.from_numpy(np.array([info['bbox'][:4] for info in adv_info]))
+    adv_label = [info['category_id'] for info in adv_info]
+    gt_bbox=  torch.from_numpy(np.array([info['bbox'][:4] for info in gt_info]))
+    gt_label = [info['category_id'] for info in gt_info]
+    iou_calt = BboxOverlaps2D()
+    iou_matrix = iou_calt(adv_bbox,gt_bbox) 
+    match_idx = torch.argwhere(iou_matrix > 0.7)
+    for idx in match_idx:
+        adv_i = int(idx[0])
+        gt_i = int(idx[1])
+        if adv_label[adv_i] == gt_label[gt_i]:
+            adv_info[adv_i]['iou_est'] = True
+    
 def main(args=parse_args()):
     # build the model from a config file and a checkpoint file
     model = init_detector(args.config, args.checkpoint, device=args.device,args=args)
@@ -105,31 +125,37 @@ def main(args=parse_args()):
         out_file=os.path.join(args.out_dir,'ori.png'))
     defense_result = None 
     if args.defense:
-        defense_result = single_gpu_adv(model,img_meta,args)
+        defense_result,defense_img = single_gpu_adv(model,img_meta,args)
+ 
         show_result_pyplot(
             model,
-            args.img,
+            defense_img,
             defense_result,
             palette=args.palette,
             score_thr=args.show_score_thr,
             out_file=os.path.join(args.out_dir,'defense.png'))
         args.defense=False
-    adv_result = single_gpu_adv(model,img_meta,args)
+    adv_result ,adv_img = single_gpu_adv(model,img_meta,args)
+
     if args.test_cfg is not None and args.test_checkpoint is not None:
         model = init_detector(args.test_cfg, args.test_checkpoint, device=args.device,args=args)
     show_result_pyplot(
         model,
-        args.img,
+        adv_img,
         adv_result,
         palette=args.palette,
         score_thr=args.show_score_thr,
         out_file=os.path.join(args.out_dir,'adv.png'))
     # show the results
     ori_info = _det2json(ori_result,model.CLASSES,args.show_score_thr)
-    adv_info = _det2json(adv_result,model.CLASSES,args.show_score_thr)
+    adv_info = _det2json(adv_result,model.CLASSES,args.show_score_thr,iou_est=True)
+    cal_iou(ori_info,adv_info)
     defense_info = None 
     if defense_result is not None :
-        defense_info = _det2json(defense_result,model.CLASSES,args.show_score_thr)
+        defense_info = _det2json(defense_result,model.CLASSES,args.show_score_thr,iou_est=True)
+        cal_iou(ori_info,defense_info)
+    ori_img = cv2.imread(args.img)
+    adv_info.append({"psnr":psnr(ori_img,adv_img)})
     return ori_info,adv_info,defense_info
 
 
